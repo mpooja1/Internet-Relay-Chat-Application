@@ -11,17 +11,13 @@ def create_socket(address):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.setblocking(0)
-    s.bind(address)
-    s.listen(MAX_CLIENTS)
-    print("Now listening at ", address)
+     
     return s
 
 class ChatHall:
     def __init__(self):
         self.rooms = {} # {room_name: Room}
-        self.room_member_map = {} # {membername-roomname: roomName}
-	self.members_map = {} #{membername : member}
-	
+        
 
     def welcome_new(self, new_member):
         new_member.socket.sendall(b'Welcome to pychat.\nPlease tell us your name:\n')
@@ -40,9 +36,7 @@ class ChatHall:
 			print (self.rooms[room].members)
 		
 		        msg += room + ": " + str(len(self.rooms[room].members)) + " member(s)\n"
-			for member1 in self.rooms[room].members:
-				msg += member1.name +"\n"
-	    member.socket.sendall(msg.encode())
+			 
     
     def msg_handler(self, member, msg):
         
@@ -61,19 +55,14 @@ class ChatHall:
         if "name:" in msg:
             name = msg.split()[1]
             member.name = name
-            print("New connection from:", member.name)
-	    self.members_map[member.name]=member
-            member.socket.sendall(instructions)
+            
 
         elif "<join>" in msg:
             same_room = False
             if len(msg.split()) >= 2: # error check
-                room_name = msg.split()[1]
-		member.currentroomname = room_name
                 if member.name+"-"+room_name in self.room_member_map: # switching?
                     if self.room_member_map[member.name+"-"+room_name] == room_name:
                         member.socket.sendall(b'You are already in room: ' + room_name.encode())
-                        same_room = True
                     else: # switch
                         old_room = self.room_member_map[member.name+"-"+room_name]
                        # self.rooms[old_room].remove_member(member)
@@ -81,10 +70,7 @@ class ChatHall:
                     if not room_name in self.rooms: # new room:
                         new_room = Room(room_name)
                         self.rooms[room_name] = new_room
-                    self.rooms[room_name].members.append(member)
-                    self.rooms[room_name].welcome_new(member)
-                    self.room_member_map[member.name+"-"+room_name] = room_name
-            else:
+                    else:
                 member.socket.sendall(instructions)
 
         elif "<list>" in msg:
@@ -103,9 +89,7 @@ class ChatHall:
 		    if member.name+"-"+leaveroomname in self.room_member_map:
 			del self.room_member_map[member.name+"-"+member.currentroomname]
 			self.rooms[leaveroomname].remove_member(member)
-	       		print("ChatMember: " + member.name + " has left"+leaveroomname+"\n")
-			if len(self.rooms[leaveroomname].members)==0:
-			    del self.rooms[leaveroomname]
+	       		 
 		    else :
 			msg = "you entered wrong room name please try again\n"
 			member.socket.sendall(msg.encode())
@@ -122,10 +106,7 @@ class ChatHall:
 		    switchroomname=msg.split()[1]
 		 #   isroom = self.room_member_map[member.name+"-"+switchroomname]
 		 #   if isroom == switchroomname :
-	 	    if member.name+"-"+switchroomname in self.room_member_map:
-	
-			member.currentroomname = switchroomname
-
+	 	    
 		    else:
 			msg = "you are not in entered room please join"
 			member.socket.sendall(msg.encode())
@@ -138,14 +119,6 @@ class ChatHall:
 		    membername = msg.split()[1]
 		    if membername in self.members_map:
 			    newmember = self.members_map[membername]
-			    personal_room = Room("personal-"+member.name+"-"+membername)
-			    self.rooms["personal-"+member.name+"-"+membername] = personal_room
-			    self.rooms["personal-"+member.name+"-"+membername].members.append(member)
-			    self.rooms["personal-"+member.name+"-"+membername].members.append(newmember)
-			    self.room_member_map[member.name+"-"+"personal-"+member.name+"-"+membername] = "personal-"+member.name+"-"+membername
-			    #self.rooms[room_name].welcome_new(member)
-			    self.room_member_map[membername+"-"+"personal-"+member.name+"-"+membername] = "personal-"+member.name+"-"+membername
-			    member.currentroomname = "personal-"+member.name+"-"+membername
 			    newmember.currentroomname = "personal-"+member.name+"-"+membername
 		    else:
 			msg = "Entered member does not exsist!!"
@@ -162,16 +135,14 @@ class ChatHall:
                 self.rooms[self.room_member_map[member.name+"-"+member.currentroomname]].broadcast(member, msg.encode())
             else:
                 msg = 'You are currently not in any room! \n' \
-                    + 'Use [<list>] to see available rooms! \n' \
-                    + 'Use [<join> room_name] to join a room! \n'
+                    + 'Use [<list>] to see available rooms! \n' 
+                     
                 member.socket.sendall(msg.encode())
     
     def remove_member(self, member):
         if member.name +"-"+member.currentroomname in self.room_member_map:
             self.rooms[self.room_member_map[member.name+"-"+member.currentroomname]].remove_member(member)
-            del self.room_member_map[member.name+"-"+member.currentroomname]
-        print("ChatMember: " + member.name + " has left\n")
-
+             
     
 class Room:
     def __init__(self, name):
