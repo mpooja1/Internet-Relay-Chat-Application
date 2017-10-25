@@ -26,27 +26,7 @@ try:
 	while True:
 	    read_sockets, write_sockets, error_sockets = select.select(socket_list, [], [])
 	    
-	    for s in read_sockets:
-		if s is server_connection: # incoming message 
-		    msg = s.recv(READ_BUFFER)
-		    if not msg:
-			print("Server down!")
-			sys.exit(2)
-		    else:
-			if msg == util_chat.QUIT_STRING.encode():
-			    sys.stdout.write('Bye\n')
-			    sys.exit(2)
-			else:
-			    sys.stdout.write(msg.decode())
-			    if 'Please tell us your name' in msg.decode():
-				msg_prefix = 'name: ' # identifier for name
-			    else:
-				msg_prefix = ''
-			    prompt()
-
-		else:
-		    msg = msg_prefix + sys.stdin.readline()
-		    server_connection.sendall(msg.encode())
+	   
 finally:
     sys.exit(2)
 		
